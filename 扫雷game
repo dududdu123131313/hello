@@ -1,1 +1,203 @@
 
+
+#define _CRT_SECURE_NO_WARNINGS 1
+
+#include<stdio.h>
+#include<stdlib.h>
+#include<time.h>
+#define ROW 9
+#define COL 9
+#define ROWS 11
+#define COLS 11
+#define MINE_NUMBER 10
+
+
+
+void reset(char arr[ROWS][COLS], char ch)//将数组的每一个元素赋值为给定值
+{
+	for (int i = 0; i < ROWS; i++)
+	{
+		for (int j = 0; j < COLS; j++)
+		{
+			arr[i][j] = ch;
+		}
+	}
+}
+
+void setmine(char arr[ROWS][COLS])//利用生成随机数的知识使用随机的行号列标在mine数组放置地雷直到将宏定义的地雷数放置完
+{
+	int mine_number = MINE_NUMBER;
+	int row = rand() % 9 + 1;//生成一到九的行号
+	int col = rand() % 9 + 1;//生成一到九的列标
+
+	while (mine_number > 0)
+	{
+		if (arr[row][col] == '0')//用来不是地雷的地方才能放置地雷
+		{
+			arr[row][col] = '1';//安装地雷
+			mine_number--;
+		}
+		else
+		{
+			row = rand() % 9 + 1;
+			col = rand() % 9 + 1;
+		}
+
+	}
+}
+
+void display(char arr[ROWS][COLS])
+{
+	for (int i = 0; i <= COL; i++)
+	{
+		printf(" %d  ", i);//打印行号
+	}
+	printf("\n\n");
+	for (int i = 1; i <= ROW; i++)//第一个和第二个for进去分别打印一行数组和一条分割线
+	{                             //数组行为:（空格）元素（空格）|（空格）元素（空格）|（空格）元素（空格）  
+								  //分割线为： -      -      -   |   -      -     -   |   -     -      -
+		printf(" %d  ", i);//打印列标
+
+		for (int j = 1; j <= COL; j++)
+		{
+
+			printf(" %c ", arr[i][j]);
+			if (j < COL)
+			{
+				printf("|");//为了美观，不打印最后一个'|'
+			}
+
+		}
+		printf("\n");
+		printf("    ");
+
+
+		for (int k = 1; k <= COL; k++)
+		{
+			printf("---");
+			if (k < COL)
+			{
+				printf("|");//为了美观，不打印最后一个'|'
+			}
+
+		}
+		printf("\n");
+	}
+}
+
+
+
+
+
+
+
+char nearmine(char mine[ROWS][COLS], int row, int col)//返回所选坐标字符型的地雷数量
+{
+	return (mine[row - 1][col - 1] + mine[row - 1][col] + mine[row - 1][col + 1] + mine[row][col - 1] + mine[row][col + 1]
+		+ mine[row + 1][col - 1] + mine[row + 1][col] + mine[row + 1][col + 1] - 7 * '0');
+}
+
+int player_move(char mine[ROWS][COLS], char show[ROWS][COLS])//首先输入合法坐标然后玩家移动，每一步结果只有两个：踩到雷还有没踩到
+
+{
+	int row = 0, col = 0;
+	int flag = 1;
+	do//输入合法坐标，在行号列标范围内，并且没有被走过
+	{
+		printf("\n---------------------------------------输入坐标，中间用空格隔开:>");
+		scanf("%d %d", &row, &col);
+		if (row >= 1 && row <= 9 && col >= 1 && col <= 9 && show[row][col] == '*')
+			flag = 0;
+		else
+			printf("输入错误\n");
+	} while (flag);
+	if (mine[row][col] == '1')//踩到雷，返回-1
+		return -1;
+	else
+	{
+		show[row][col] = nearmine(mine, row, col);//nearmine将会返回字符型的地雷数
+												  //将用来展示的show数组的相应坐标的元素赋值为周围的地雷数
+		return 1;
+	}
+
+}
+
+void meau()//菜单
+{
+	printf("------------------\n");
+	printf("|     1.play     |\n");
+	printf("|----------------|\n");
+	printf("|     0.exit     |\n");
+	printf("------------------\n");
+
+}
+
+
+void game()
+{
+
+	char mine[ROWS][COLS];//mine：地雷
+	char show[ROWS][COLS];
+	reset(mine, '0');//初始化mine为全零
+	reset(show, '*');//初始化reset为全*
+	setmine(mine);//安置地雷
+	//display(mine);
+	display(show);//展现
+	int count = 0;
+
+	do
+	{
+		int move = player_move(mine, show);
+		if (move == -1)//踩到雷游戏结束
+		{
+			printf("\n---------------------------------------踩到地雷，游戏结束>\n");
+			display(mine);
+			break;
+
+		}
+		else if (move == 1)//没有踩到雷则步数count加一
+		{
+			count++;
+			if (count == ROW * COL - MINE_NUMBER)//判断是否走完了步数，走完了游戏就成功了
+			{
+				printf("\n---------------------------------------排除地雷，游戏结束>\n");
+				display(mine);
+				break;
+
+			}
+
+		}
+
+		display(show);
+
+	} while (1);
+
+
+
+}
+
+int main()
+{
+	int input = 0;
+	srand((unsigned)time(NULL));
+	do
+	{
+		meau();
+		scanf("%d", &input);
+		switch (input)
+		{
+		case 1:
+			game(); break;
+		case 0:
+			break;
+		default:
+			printf("输入错误，请重新输入\n"); break;
+
+		}
+
+	} while (input);
+	return 0;
+
+
+
+}
